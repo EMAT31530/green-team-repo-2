@@ -1,0 +1,141 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[4]:
+
+
+#create datafram to pull out data as required
+import pandas as pd
+import numpy as np
+Household_Spend = pd.read_csv('UK_Household_Quantity2.csv', header=None)
+
+Household_Spend
+
+
+# In[16]:
+
+
+#Pull required data
+Milk = Household_Spend.iloc[1,6:51].values
+
+
+# In[21]:
+
+
+Milk = np.reshape(Milk, (45, 1))
+Milk = Milk.astype(np.int32)
+Milk
+
+
+# In[22]:
+
+
+#Pull yearly data
+Year = Household_Spend.iloc[0,6:51].values
+Year = np.reshape(Year, (45, 1))
+Year = Year.astype(np.int32)
+Year
+
+
+# In[23]:
+
+
+get_ipython().run_line_magic('matplotlib', 'inline')
+import matplotlib.pyplot as plt
+
+# for a scatter plot...
+plt.scatter(Year, Milk)
+plt.xlabel('Year')
+plt.ylabel('Weekly Milk Demand (ml)')
+plt.show()
+
+
+# In[24]:
+
+
+import numpy as np
+Year = np.hstack((np.ones(shape=(len(Year), 1)), Year))
+Year
+
+
+# In[25]:
+
+
+Year.T
+
+
+# $$(\mathbf{X}^T\mathbf{X})^{-1} \mathbf{X}^T\mathbf{y}$$
+
+# In[27]:
+
+
+# ls - is the least sqares estimat
+
+ls = np.linalg.inv(Year.T.dot(Year)).dot(Year.T).dot(Milk)
+ls
+
+
+# In[29]:
+
+
+# = features dotproduct with least squares
+Milk_hat = Year.dot(ls)
+Milk_hat
+
+
+# In[30]:
+
+
+# mean sqaured error - for numpy we need to flatten our array
+mse = np.mean((Milk.flatten() - Milk_hat) **2)
+mse
+
+
+# In[32]:
+
+
+plt.plot(Year[:,1], Milk_hat, c='g', label='Model')  # as we are using yhat these are our predictions - green line of model
+plt.scatter(Year[:,1], Milk, c='b', label='Data') # this is our actual data
+
+plt.legend(loc='best')
+
+plt.xlabel('Year')
+plt.ylabel('Milk Demand (ml)')
+plt.show()
+
+
+# In[38]:
+
+
+# Now we predict milk demand based on year
+new_Year = np.array([[1, 2025], [1, 2030]])
+
+new_Milk_hat = new_Year.dot(ls)
+
+new_Milk_hat
+
+
+# In[39]:
+
+
+plt.scatter(Year[:,1], Milk, c='b', label='Data')
+
+Year = np.concatenate((Year, new_Year)) # adding the new points to the old data so that we have one array. 
+Milk_hat = np.concatenate((Milk_hat, new_Milk_hat)) #same as line above
+
+plt.plot(Year[:,1], Milk_hat, c='g', label='Model')
+plt.scatter(new_Year[:,1], new_Milk_hat, c='r')
+
+plt.legend(loc='best')
+
+plt.xlabel('Square Meters')
+plt.ylabel('Price (k)')
+
+plt.show()
+
+
+# In[ ]:
+
+
+
+

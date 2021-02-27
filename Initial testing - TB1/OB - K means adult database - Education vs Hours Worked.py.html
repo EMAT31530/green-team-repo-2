@@ -1,0 +1,147 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+# In[31]:
+
+
+data = pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data', names=["a", "b", "c", "Education","e", "f","g", "h","i", "j","k", "Hours Worked","m", "n"]) 
+#this is the dataset that we used in the regression
+# in this we want to cluster so we only want the features and not the lables
+data
+
+
+# In[32]:
+
+
+print(data.loc[data['Hours Worked'] == '40'])
+
+
+# In[55]:
+
+
+#X = data.iloc[0:100, [3:4, 11:12]].values #selecting the features, pretending we don't know the ys
+X = data.iloc[0:100, [3, 11]].values
+X
+#Y = data.iloc[0:100, 11:12].values
+#Y
+
+
+# 
+
+# In[74]:
+
+
+x1 = X[:,0]
+x2 = X[:,1]
+plt.scatter(x1, x2)
+plt.xlabel('Education Level')
+plt.ylabel('Number of Hours Worked')
+plt.show()
+
+
+# In[75]:
+
+
+X = X / np.linalg.norm(X) #standardise to normal length 
+
+
+# In[77]:
+
+
+x1 = X[:,0]
+x2 = X[:,1]
+plt.scatter(x1, x2)
+plt.xlabel('Education Level')
+plt.ylabel('Number of Hours Worked')
+plt.show()
+
+
+# In[70]:
+
+
+k = 3 # setting to say that we have 3 clusters but could be any number of values
+centroids = [] # setting centriods to be random points that are already in the dataset
+for a in range(k):
+    rn = np.random.randint(0, len(X))
+    centroids.append(X[rn])
+
+centroids = np.array(centroids) #converting to be a numpy array of arrays
+
+
+# In[78]:
+
+
+plt.scatter(centroids[:,0], centroids[:,1], marker='*', s=200, c='green')
+plt.scatter(x1, x2, s=5)
+plt.xlabel('Education Level')
+plt.ylabel('Number of Hours Worked')
+plt.show()
+
+
+# In[79]:
+
+
+clusters = np.zeros(len(X))
+prev_clusters = None
+
+while True: #we want to loop over each point in data set and calculate the distance to the centroids 
+    for i in range(len(X)):
+        lowest_dist = np.inf # for first iteration, we set the dist to be infinity. It will update after the first run
+        for j in range(k):
+            dist = np.linalg.norm(X[i] - centroids[j], ord=2) #distance from data point to cluster
+            if dist < lowest_dist:
+                lowest_dist = dist
+                best_cluster = j
+            
+        clusters[i] = best_cluster
+    
+    k_points = [] #creating an array of k points and then store array points in this array 
+    for i in range(k):
+        k_points.append([])
+    
+    for i in range(len(X)):
+        k_points[int(clusters[i])].append(X[i]) # this is a list containing three different lists of the centroid positions
+    
+    for i in range(k):
+        centroids[i] = np.mean(k_points[i], axis=0) #update centroids based on result
+        
+    converged = (clusters==prev_clusters).all() # if clusters is equal to previous clusters then we want to break as converged
+    print("Converged? "+str(converged))
+    if converged:
+        break
+    
+    prev_clusters = np.copy(clusters)
+
+            
+
+
+# In[81]:
+
+
+fig, ax = plt.subplots() #subplots is a way to create multiple plots on the same figure 
+colours = ['r','g', 'b']
+    
+for i in range(k):
+    points = np.array([X[j] for j in range(len(X)) if clusters[j] == i])
+    ax.scatter(points[:, 0], points[:, 1], s=5, c=colours[i]) #plotting points
+ax.scatter(centroids[:, 0], centroids[:, 1], marker='*', s=200, c='black') #plotting centroids
+
+#the classification here is not to the nearest centriod as we are in 4 dimensions to take account of but we are only plotting 2
+plt.xlabel('Education Level')
+plt.ylabel('Number of Hours Worked')
+plt.show()
+
+
+# In[ ]:
+
+
+
+

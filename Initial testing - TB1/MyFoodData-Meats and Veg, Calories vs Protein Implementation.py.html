@@ -1,0 +1,170 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# ## Code implementation successful, need to play around with different values to be able to see if KNN can be used with nutrition to create good clustering. 
+
+# In[2]:
+
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import openpyxl #this is used for importing .xlxs files
+import sklearn
+from matplotlib.colors import ListedColormap
+from sklearn import neighbors, datasets
+
+
+# In[3]:
+
+
+#importing the dataset from online
+data = pd.read_excel('https://www.myfooddata.com/spreadsheets/MyFoodData-Nutrition-Facts-SpreadSheet-Release-1-4.xlsx', header=3, usecols="B:J", engine = 'openpyxl')
+data
+
+
+# In[4]:
+
+
+#removing nan from dataset. The subsets can be changed so that nan valeus in that column are removed 
+#if you want to remove all nan from the dataframe, use code below: 
+#data_edited = data.dropna()
+data_clean = data.dropna(subset=['Food Group', 'Calories', 'Protein (g)'])
+data_clean
+
+
+# In[5]:
+
+
+#pulling out Meat and Vegetable food groups for analysis below with KNN
+data_MV = data_clean[data_clean['Food Group'].isin(['Meats', 'Vegetables', 'Grains and Pasta'])]
+data_MV
+
+
+# In[6]:
+
+
+y = data_MV.iloc[:, 1].values #list of food groups
+
+X = data_MV.iloc[:, [2,3]].values #lables and values
+
+print(X)
+print(y)
+
+
+# In[7]:
+
+
+Food_Groups = np.reshape(y, (-1, 1))
+Food_Groups
+
+
+# In[8]:
+
+
+#this was input by Cam as a way of encoding. Code updated by HS and OB 14/12/20 so that no longer required. 
+#Food_Group = (['American Indian', 'Baby Foods', 'Baked Foods', 'Beans and Lentils', 'Beverages', 'Breakfast Cereals','Dairy and Egg Products', 'Fast Foods', 'Fats and Oils', 'Fish', 'Fruits', 'Grains and Pasta', 'Meats', 'Nuts and Seeds', 'Prepared Meals', 'Restaurant Foods', 'Snacks', 'Soups and Sauces', 'Spices and Herbs', 'Sweets', 'Vegetables'])
+#Food_Group
+#Baked foods, beans and lentils, breakfast cereals, dairy and egg products, fats and oil,s fish, friuits, grains and pasts, meats, nuts and seeds, snacks, soups and sauces,speices and herbs, sweets, vegetables. 
+
+
+# In[9]:
+
+
+Food_Groups_Encoded = Food_Groups
+Food_Groups_Encoded
+
+
+# In[10]:
+
+
+#this is transforming list of food groups into numbers dependant on value
+
+from sklearn.preprocessing import LabelEncoder
+labelencoder_Food_Groups_Encoded = LabelEncoder()
+Food_Groups_Encoded[:, 0] = labelencoder_Food_Groups_Encoded.fit_transform(Food_Groups_Encoded[:, 0])
+Food_Groups_Encoded
+
+
+# In[11]:
+
+
+Food_Groups_Encoded = Food_Groups_Encoded.astype(np.int32)
+Food_Groups_Encoded = np.reshape(Food_Groups_Encoded, (1, -1))
+Food_Groups_Encoded
+
+
+# In[12]:
+
+
+#implemting KNN using sklearn
+#setting the K value 
+n_neighbors = 2
+
+
+# In[13]:
+
+
+#taking the first two features from the dataset, and the goal values of the dataset for classification. 
+X
+y = Food_Groups_Encoded.flatten()
+y
+
+
+# In[14]:
+
+
+h = 1  # step size in the mesh  // originally set at 0.02
+
+# Create color maps
+cmap_light = ListedColormap(['orange', 'cyan', 'cornflowerblue'])
+cmap_bold = ListedColormap(['darkorange', 'c', 'darkblue'])
+
+
+# In[17]:
+
+
+for weights in ['uniform', 'distance']:
+    # we create an instance of Neighbours Classifier and fit the data.
+    clf = neighbors.KNeighborsClassifier(n_neighbors, weights=weights)
+    clf.fit(X, y)
+
+    # Plot the decision boundary. For that, we will assign a color to each
+    # point in the mesh [x_min, x_max]x[y_min, y_max].
+    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                         np.arange(y_min, y_max, h))
+    Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+
+    # Put the result into a color plot
+    Z = Z.reshape(xx.shape)
+    plt.figure()
+    plt.pcolormesh(xx, yy, Z, cmap=cmap_light)
+
+    # Plot also the training points
+    # this is plotting X1 on x vs, X2 on y
+    # in this example, x1 = calories, x2 = proteins
+    plt.scatter(X[:, 0], X[:, 1], c=y, cmap=cmap_bold,
+                edgecolor='k', s=20)
+    plt.xlim(xx.min(), xx.max())
+    plt.ylim(yy.min(), yy.max())
+    plt.title("3-Class classification (k = %i, weights = '%s')"
+              % (n_neighbors, weights))
+    plt.xlabel('Calories')
+    plt.ylabel('Protein (g)')
+
+plt.show()
+
+
+# In[ ]:
+
+
+#this shows that it is difficut to do clustering of these food groups with protein vs calories
+
+
+# In[ ]:
+
+
+
+
