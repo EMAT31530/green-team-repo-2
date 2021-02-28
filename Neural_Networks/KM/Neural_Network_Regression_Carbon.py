@@ -10,8 +10,9 @@ import sklearn as skl
 data = pd.read_pickle("./nutrition_data_clean.pkl")
 
 # drop food group and brand columns
-print(list(data.columns))
 data.drop(data.columns[1:3], axis=1, inplace=True)
-print(list(data.columns))
-data.drop(['Price (£)', 'Price per Weight (£/10Gram)'])
-print(list(data.columns))
+
+# drop price columns
+data.drop(['Price (£)', 'Price per Weight (£/100Gram)'], axis=1, inplace=True)
+
+print(list(data))
